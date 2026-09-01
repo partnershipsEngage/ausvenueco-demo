@@ -63,20 +63,46 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 Now guest entries save centrally and Venue Admin changes are shared across devices.
 
-## 3. Deploy
+## 3. Deploy to Cloudflare Pages
 
-This is a standard Next.js project and can be deployed from GitHub.
+This project is configured as a **static Next.js export**. Every route
+prerenders to plain HTML and all Supabase calls run in the browser, so no
+server runtime and no adapter (`@cloudflare/next-on-pages`) is needed.
 
-Recommended workflow for the existing venue-mode stack:
+### Cloudflare Pages build settings
 
-1. Create a branch such as `feature/brabham-hotel-demo`.
-2. Add this as a standalone app or merge the route/components into the existing repo.
-3. Add the two Supabase environment variables in the deployment environment.
-4. Deploy a preview.
-5. Test mobile widths around 390px and 430px.
-6. Submit test entries from a second device.
-7. Sign into `/admin`, switch content on/off, refresh the public demo on the second device, and confirm the changes are visible.
-8. Only then share the demo URL.
+| Setting | Value |
+| --- | --- |
+| Framework preset | **None** |
+| Build command | `npm run build` |
+| Build output directory | `out` |
+| Node version | pinned to 22.11.0 by `.node-version` |
+
+Do not select the "Next.js" framework preset — it runs the server adapter and
+conflicts with the static export.
+
+### Environment variables
+
+Add both as **plaintext** variables (not secrets — they must be present at
+build time so Next can inline them into the client bundle):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon or publishable key>
+```
+
+The anon key is designed to be public; row level security in
+`supabase/schema.sql` is what protects the data. If either variable is missing
+the build still succeeds and the site silently runs in local-browser demo mode,
+so check them carefully.
+
+### After the first deploy
+
+1. Test mobile widths around 390px and 430px.
+2. Submit a test entry from a second device.
+3. Sign into `/admin`, switch content on/off, refresh the public page on the
+   second device, and confirm the change is visible.
+4. Only then share the demo URL.
 
 ## 4. Best route structure inside the existing Fanverse/Bragger venue repo
 
